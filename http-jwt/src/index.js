@@ -12,7 +12,7 @@ function createContextCreator({
     createStat = defaultCreateStat,
     loadVerificationInformation
 }) {
-    return function createContext(request) {
+    return async function createContext(request) {
         const user = await authenticateRequest(request);
         const log = createLogger(request, user);
         const stat = createStat(request, user);
@@ -22,12 +22,12 @@ function createContextCreator({
 
     async function authenticateRequest(request) {
         const checks = {
-            body: bodyTokenName && req && req.body && req.body[bodyTokenName],
-            query: queryTokenName && req && req.query && req.query[queryTokenName],
+            body: bodyTokenName && request && request.body && request.body[bodyTokenName],
+            query: queryTokenName && request && request.query && request.query[queryTokenName],
             [`authorization header (${authorizationHeaderName})`]: authorizationHeaderName &&
-                req &&
-                req.headers[authorizationHeaderName] &&
-                extractBearerFromAuthorization(req.headers[authorizationHeaderName])
+                request &&
+                request.headers[authorizationHeaderName] &&
+                extractBearerFromAuthorization(request.headers[authorizationHeaderName])
         };
 
         for (const [source, token] of Object.entries(checks)) {
@@ -58,8 +58,8 @@ function createContextCreator({
 
     function extractBearer(authorization) {
         const [type, token] = authorization.split(` `);
-        if (laxTokenHeader) {
-            return token || type;
+        if (laxTokenHeader && !token) {
+            return type;
         } else if (type.toLowerCase() === tokenTypeName) {
             return token;
         } else {
@@ -67,7 +67,7 @@ function createContextCreator({
         }
     }
 
-    async function verifyToken(source, token, params) {
+    async function verifyToken(source, token) {
         try {
             const decoded = await jwt.decode(token, { complete: true });
             const { key, options } = await loadVerificationInformation(decoded.payload.iss, decoded.header.kid);
