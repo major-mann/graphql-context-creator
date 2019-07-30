@@ -1,5 +1,6 @@
 module.exports = createContextCreator;
 
+const uuid = require(`uuid`);
 const jwt = require(`jsonwebtoken`);
 
 function createContextCreator({
@@ -34,7 +35,7 @@ function createContextCreator({
             if (!token) {
                 continue;
             }
-            const user = await verifyToken(source, token);
+            const user = await verifyToken(source, request, token);
             if (user) {
                 return user;
             }
@@ -67,7 +68,7 @@ function createContextCreator({
         }
     }
 
-    async function verifyToken(source, token) {
+    async function verifyToken(source, request, token) {
         try {
             const decoded = await jwt.decode(token, { complete: true });
             const { key, options } = await loadVerificationInformation(decoded.payload.iss, decoded.header.kid);
@@ -81,7 +82,7 @@ function createContextCreator({
                     throw new Error(`Token expired at ${ex.expiredAt.toISOString()}`);
                 default: {
                     const id = uuid.v4().replace(/-/g, ``);
-                    createLogger(req).warn(`Unable to validate token "${token}" received in ${source}. ${id} ` +
+                    createLogger(request).warn(`Unable to validate token "${token}" received in ${source}. ${id} ` +
                         `${ex.name} ${ex.stack}`);
                     throw new Error(`Internal server error. Please send "${id}" to support to assist with ` +
                         `identifying error`);
