@@ -11,7 +11,8 @@ function createContextCreator({
     tokenTypeName = `bearer`,
     createLogger = defaultCreateLogger,
     createStat = defaultCreateStat,
-    loadVerificationInformation
+    loadVerificationInformation,
+    verifyTokenSignature = true
 }) {
     return async function createContext(request) {
         const user = await authenticateRequest(request);
@@ -71,9 +72,16 @@ function createContextCreator({
     async function verifyToken(source, request, token) {
         try {
             const decoded = await jwt.decode(token, { complete: true });
-            const { key, options } = await loadVerificationInformation(decoded.payload.iss, decoded.header.kid);
-            const user = await jwt.verify(token, key, options);
-            return user;
+            if (verifyTokenSignature) {
+                const { key, options } = await loadVerificationInformation(
+                    decoded.payload.iss,
+                    decoded.header.kid
+                );
+                const user = await jwt.verify(token, key, options);
+                return user;
+            } else {
+                return decoded.payload;
+            }
         } catch (ex) {
             switch (ex.name) {
                 case `JsonWebTokenError`:
