@@ -11,7 +11,7 @@ function createContextCreator({
     tokenTypeName = `bearer`,
     createLogger = defaultCreateLogger,
     createStat = defaultCreateStat,
-    loadVerificationInformation = false
+    loadVerificationInformation
 }) {
     return async function createContext(request) {
         const user = await authenticateRequest(request);
