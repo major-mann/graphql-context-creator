@@ -11,8 +11,7 @@ function createContextCreator({
     tokenTypeName = `bearer`,
     createLogger = defaultCreateLogger,
     createStat = defaultCreateStat,
-    loadVerificationInformation,
-    verifyTokenSignature = true
+    loadVerificationInformation = false
 }) {
     return async function createContext(request) {
         const user = await authenticateRequest(request);
@@ -72,7 +71,7 @@ function createContextCreator({
     async function verifyToken(source, request, token) {
         try {
             const decoded = await jwt.decode(token, { complete: true });
-            if (verifyTokenSignature) {
+            if (loadVerificationInformation) {
                 const { key, options } = await loadVerificationInformation(
                     decoded.payload.iss,
                     decoded.header.kid
