@@ -11,13 +11,15 @@ function createContextCreator({
     tokenTypeName = `bearer`,
     createLogger = defaultCreateLogger,
     createStat = defaultCreateStat,
+    createMaintenanceNotifier = defaultCreateNotifier,
     loadVerificationInformation
 }) {
     return async function createContext(request) {
         const user = await authenticateRequest(request);
         const log = createLogger(request, user);
         const stat = createStat(request, user);
-        const context = { log, stat, user };
+        const maintain = createMaintenanceNotifier(request, user);
+        const context = { log, stat, user, maintain };
         return context;
     };
 
@@ -115,4 +117,9 @@ function defaultCreateStat() {
         set: () => undefined,
         histogram: () => undefined,
     };
+}
+
+function defaultCreateNotifier() {
+    // eslint-disable-next-line no-console
+    return (...args) => console.error(...args.map(arg => JSON.stringify(arg)));
 }
