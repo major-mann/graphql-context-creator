@@ -108,18 +108,23 @@ function defaultCreateLogger() {
 function defaultCreateStat() {
     // This is just a placeholder so a stats client can be passed in
     return {
-        increment: () => undefined,
-        decrement: () => undefined,
-        timing: () => undefined,
-        counter: () => undefined,
-        gauge: () => undefined,
-        gaugeDelta: () => undefined,
-        set: () => undefined,
-        histogram: () => undefined,
+        increment: log,
+        decrement: log,
+        timing: log,
+        counter: log,
+        gauge: log,
+        gaugeDelta: log,
+        set: log,
+        histogram: log
     };
+
+    function log(...args) {
+        // eslint-disable-next-line no-console
+        console.debug(...args);
+    }
 }
 
 function defaultCreateNotifier() {
     // eslint-disable-next-line no-console
-    return (...args) => console.error(...args.map(arg => JSON.stringify(arg)));
+    return (...args) => console.warn(...args);
 }
