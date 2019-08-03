@@ -48,7 +48,7 @@ function createContextCreator({
                 return { token, user };
             }
         }
-        return undefined;
+        return { };
     }
 
     function extractBearerFromAuthorization(authorization) {
