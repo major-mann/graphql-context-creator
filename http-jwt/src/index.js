@@ -15,11 +15,17 @@ function createContextCreator({
     loadVerificationInformation
 }) {
     return async function createContext(request) {
-        const user = await authenticateRequest(request);
+        const { token, user } = await authenticateRequest(request);
         const log = createLogger(request, user);
         const stat = createStat(request, user);
         const maintain = createMaintenanceNotifier(request, user);
-        const context = { log, stat, user, maintain };
+        const context = {
+            log,
+            stat,
+            user,
+            token,
+            maintain
+        };
         return context;
     };
 
@@ -39,7 +45,7 @@ function createContextCreator({
             }
             const user = await verifyToken(source, request, token);
             if (user) {
-                return user;
+                return { token, user };
             }
         }
         return undefined;

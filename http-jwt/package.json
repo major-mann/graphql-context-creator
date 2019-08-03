@@ -1,6 +1,6 @@
 {
   "name": "@major-mann/graphql-context-creator-http-jwt",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "A library to assist with creating context for graphql requests that are served over HTTP",
   "main": "src/index.js",
   "keywords": [
