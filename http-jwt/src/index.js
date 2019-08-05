@@ -15,7 +15,7 @@ function createContextCreator({
     loadVerificationInformation
 }) {
     return async function createContext(request) {
-        const { token, user } = await authenticateRequest(request);
+        const { tokens, token, user } = await authenticateRequest(request);
         const log = createLogger(request, user);
         const stat = createStat(request, user);
         const maintain = createMaintenanceNotifier(request, user);
@@ -24,6 +24,7 @@ function createContextCreator({
             stat,
             user,
             token,
+            tokens,
             maintain
         };
         return context;
@@ -31,38 +32,39 @@ function createContextCreator({
 
     async function authenticateRequest(request) {
         const checks = {
-            body: bodyTokenName && request && request.body && request.body[bodyTokenName],
-            query: queryTokenName && request && request.query && request.query[queryTokenName],
+            body: bodyTokenName && request && request.body && [request.body[bodyTokenName]],
+            query: queryTokenName && request && request.query && [request.query[queryTokenName]],
             [`authorization header (${authorizationHeaderName})`]: authorizationHeaderName &&
                 request &&
                 request.headers[authorizationHeaderName] &&
-                extractBearerFromAuthorization(request.headers[authorizationHeaderName])
+                Array.from(extractBearerFromAuthorization(request.headers[authorizationHeaderName]))
         };
 
-        for (const [source, token] of Object.entries(checks)) {
-            if (!token) {
+        for (const [source, tokens] of Object.entries(checks)) {
+            if (!tokens) {
                 continue;
             }
-            const user = await verifyToken(source, request, token);
-            if (user) {
-                return { token, user };
+            for (const token of tokens) {
+                const user = await verifyToken(source, request, token);
+                if (user) {
+                    return { tokens, token, user };
+                }
             }
         }
         return { };
     }
 
-    function extractBearerFromAuthorization(authorization) {
+    function *extractBearerFromAuthorization(authorization) {
         if (typeof authorization !== `string`) {
-            return undefined;
+            return;
         }
         const authParts = authorization.split(`,`);
         for (let part = 0; part < authParts.length; part++) {
             const result = extractBearer(authParts[part]);
             if (result) {
-                return result;
+                yield result;
             }
         }
-        return undefined;
     }
 
     function extractBearer(authorization) {
