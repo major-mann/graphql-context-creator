@@ -7,12 +7,13 @@ function createContextCreator({
     laxTokenHeader = false,
     queryTokenName = `token`,
     bodyTokenName = `token`,
-    authorizationHeaderName = `authorization`,
     tokenTypeName = `bearer`,
-    createLogger = defaultCreateLogger,
+    extractTokensFromRequest,
+    authorizationHeaderName = `authorization`,
+    loadVerificationInformation,
     createStat = defaultCreateStat,
+    createLogger = defaultCreateLogger,
     createMaintenanceNotifier = defaultCreateNotifier,
-    loadVerificationInformation
 }) {
     return async function createContext(request) {
         const { tokens, token, user } = await authenticateRequest(request);
@@ -32,12 +33,14 @@ function createContextCreator({
 
     async function authenticateRequest(request) {
         const checks = {
+            extractTokensFromRequest: typeof extractTokenFromRequest === `function` &&
+                ensureArray(extractTokensFromRequest(request)),
             body: bodyTokenName && request && request.body && [request.body[bodyTokenName]],
             query: queryTokenName && request && request.query && [request.query[queryTokenName]],
             [`authorization header (${authorizationHeaderName})`]: authorizationHeaderName &&
                 request &&
                 request.headers[authorizationHeaderName] &&
-                Array.from(extractBearerFromAuthorization(request.headers[authorizationHeaderName]))
+                Array.from(extractBearerFromAuthorization(request.headers[authorizationHeaderName])),
         };
 
         for (const [source, tokens] of Object.entries(checks)) {
@@ -52,6 +55,16 @@ function createContextCreator({
             }
         }
         return { };
+
+        function ensureArray(value) {
+            if (Array.isArray(value)) {
+                return value;
+            } else if (value !== undefined) {
+                return [value];
+            } else {
+                return undefined;
+            }
+        }
     }
 
     function *extractBearerFromAuthorization(authorization) {
@@ -105,6 +118,9 @@ function createContextCreator({
                     throw new Error(`Token expired at ${ex.expiredAt.toISOString()}`);
                 default: {
                     const id = uuid.v4().replace(/-/g, ``);
+                    // Note: We cannot use "log" here as it gets created using the return of this function,
+                    //  so we just create a new one with the request to preserve any tracing information we
+                    //  can
                     createLogger(request).warn(`Unable to validate token "${token}" received in ${source}. ${id} ` +
                         `${ex.name} ${ex.stack}`);
                     throw new Error(`Internal server error. Please send "${id}" to support to assist with ` +
