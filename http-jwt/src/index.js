@@ -35,8 +35,10 @@ function createContextCreator({
         const checks = {
             extractTokensFromRequest: typeof extractTokenFromRequest === `function` &&
                 ensureArray(extractTokensFromRequest(request)),
-            body: bodyTokenName && request && request.body && [request.body[bodyTokenName]],
-            query: queryTokenName && request && request.query && [request.query[queryTokenName]],
+            body: bodyTokenName && request && request.body && request.body[bodyTokenName] &&
+                [request.body[bodyTokenName]],
+            query: queryTokenName && request && request.query && request.query[queryTokenName] &&
+                [request.query[queryTokenName]],
             [`authorization header (${authorizationHeaderName})`]: authorizationHeaderName &&
                 request &&
                 request.headers[authorizationHeaderName] &&
