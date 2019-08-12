@@ -97,7 +97,7 @@ function createContextCreator({
         try {
             const decoded = await jwt.decode(token, { complete: true });
             if (loadVerificationInformation) {
-                if (!decoded.payload.kid) {
+                if (!decoded.header.kid) {
                     throw new Error(`Supplid token does not have a "kid" in the header`);
                 }
                 if (!decoded.payload.iss) {
