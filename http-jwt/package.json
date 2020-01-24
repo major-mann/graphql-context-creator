@@ -10,6 +10,10 @@
   ],
   "author": "Calvin Mann <calvinmann+npm@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/major-mann/graphql-context-creator.git"
+  },
   "dependencies": {
     "jsonwebtoken": "^8.5.1"
   }
