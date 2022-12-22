@@ -15,6 +15,6 @@
     "url": "https://github.com/major-mann/graphql-context-creator.git"
   },
   "dependencies": {
-    "jsonwebtoken": "^8.5.1"
+    "jsonwebtoken": "^9.0.0"
   }
 }
